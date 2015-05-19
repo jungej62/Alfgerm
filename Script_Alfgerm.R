@@ -1,5 +1,8 @@
 #Alfalfa germination paper. Analysis initiated 5/18/2015
-library(reshape2); library(plyr); library(lattice)
+library(reshape2); library(plyr); library(lattice); library(devtools)
+library(ggplot2)
+source_gist('https://gist.github.com/jungej62/5a76b72bcd0b12a7ce8a')
+
 dat<-read.csv("ConstantTempsAll.csv", header=T)
 str(dat)
 dat$fRep<-factor(dat$Rep)
@@ -33,7 +36,13 @@ dat2<-cbind(dat2, apply(dat2[,6:36],1, sum, na.rm=T)/dat2[5])
 colnames(dat2)[71]<-"FinalGerm"
 longdat2<-melt(dat2[,c(1:5,40:70)], id=c("Rep","SeedID", "PEG", "Temp","StartSeeds"))
 longdat2<-arrange(longdat2, SeedID, PEG, Temp, Rep)
-longdat2$Day<-substr(as.character(longdat2$variable), 2,3)
+longdat2$Day<-as.numeric(substr(as.character(longdat2$variable), 2,3))
 
+m1dat<-summarySE(subset(longdat2, longdat2$PEG=="0"),
+                 measurevar="value", groupvars=c("SeedID", "Temp", "Day"))
+m1dat<-na.omit(m1dat)
 
-
+ggplot(m1dat, aes(x=Day, y=value, color=factor(Temp)))+
+  facet_wrap(~SeedID)+
+  geom_point()+
+  geom_line()
